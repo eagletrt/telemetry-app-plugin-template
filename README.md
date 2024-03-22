@@ -1,0 +1,1 @@
+# telemetry-app-base-plugin
