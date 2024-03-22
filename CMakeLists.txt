@@ -13,8 +13,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CDIR}/lib)
 add_compile_definitions("CANLIB_PARKING=")
 add_compile_definitions(CANLIB_TIMESTAMP)
 
+include_directories(${CDIR})
+
 file(GLOB_RECURSE plugin_src ${CDIR}/plugin/*.cpp)
 add_library(
     ${PROJECT_NAME}
+    SHARED
     ${plugin_src}
 )
