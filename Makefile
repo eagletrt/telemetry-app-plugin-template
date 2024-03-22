@@ -5,7 +5,7 @@ MAKEFLAGS += --no-print-directory
 debug:
 	@if [ -d lib ]; then \
 		echo "removing binaries"; \
-		rm -r bin; \
+		rm -r lib; \
 	fi;
 	mkdir -p debug; \
 	cd debug; \
@@ -15,7 +15,7 @@ debug:
 release:
 	@if [ -d lib ]; then \
 		echo "removing binaries"; \
-		rm -r bin; \
+		rm -r lib; \
 	fi;
 	mkdir -p release; \
 	cd release; \
