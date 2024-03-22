@@ -1,5 +1,7 @@
 #include "plugin.hpp"
 
+extern "C" {
+
 void *pluginInitialize() {
   printf("Hello from plugin\n");
   printf("pluginInitialize\n");
@@ -11,4 +13,5 @@ void pluginRun(void *pluginData [[maybe_unused]],
 }
 void pluginDeinitialize(void *pluginData [[maybe_unused]]) {
   printf("pluginDeinitialize\n");
+}
 }
