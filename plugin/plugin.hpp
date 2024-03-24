@@ -1,4 +1,4 @@
 #pragma once
 
-#include "buffer.hpp"
-#include "buffer_utils.hpp"
+#include "buffer/buffer.hpp"
+#include "buffer/buffer_utils.hpp"
