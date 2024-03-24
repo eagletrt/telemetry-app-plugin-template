@@ -15,14 +15,11 @@ auto shouldAddSamples = [](message_signals &resampledData,
 };
 extern "C" void pluginRun(void *pluginData [[maybe_unused]],
                           message_signals &resampledData [[maybe_unused]]) {
-  resampledData.erase("power");
-
-  while (shouldAddSamples(resampledData, "power")) {
-    resampledData["power"].push(resampledData["power"].last());
-  }
-  for (int i = 0; i < resampledData["INV_L_RCV.iq_actual"].size(); i++) {
-    resampledData["power"][i] = resampledData["INV_L_RCV.iq_actual"][i] * 100.0;
-  }
+  resampledData["power"] = resampledData["INV_L_RCV.iq_actual"] *
+                               resampledData["INV_L_RCV.n_actual_filt"] +
+                           resampledData["INV_R_RCV.iq_actual"] *
+                               resampledData["INV_R_RCV.n_actual_filt"];
+  resampledData["power_kW"] = resampledData["power"] / 1000.0;
 }
 extern "C" void pluginDeinitialize(void *pluginData [[maybe_unused]]) {
   printf("pluginDeinitialize\n");
