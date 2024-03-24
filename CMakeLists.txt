@@ -21,3 +21,13 @@ add_library(
     SHARED
     ${plugin_src}
 )
+
+file(GLOB example_src ${CDIR}/examples/*.cpp)
+foreach(example ${example_src})
+    get_filename_component(example_name ${example} NAME_WE)
+    add_library(
+        ${example_name}
+        SHARED
+        ${example}
+    )
+endforeach()

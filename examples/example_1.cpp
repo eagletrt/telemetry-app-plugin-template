@@ -1,4 +1,4 @@
-#include "plugin.hpp"
+#include "plugin/plugin.hpp"
 
 extern "C" void *pluginInitialize() { return nullptr; }
 extern "C" void pluginDeinitialize(void *pluginData [[maybe_unused]]) {}
