@@ -1,38 +1,44 @@
-
-
+#pragma once
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
 
+#ifndef CANLIB_CIRCULAR_BUFFER_SIZE
+#define CANLIB_CIRCULAR_BUFFER_SIZE 2000
+#endif  // CANLIB_CIRCULAR_BUFFER_SIZE
+
 namespace Helper {
-template <bool FITS8, bool FITS16> struct Index {
+template <bool FITS8, bool FITS16>
+struct Index {
   using Type = uint32_t;
 };
 
-template <> struct Index<false, true> {
+template <>
+struct Index<false, true> {
   using Type = uint16_t;
 };
 
-template <> struct Index<true, true> {
+template <>
+struct Index<true, true> {
   using Type = uint8_t;
 };
-} // namespace Helper
+}  // namespace Helper
 
 template <typename T, size_t S,
           typename IT =
               typename Helper::Index<(S <= UINT8_MAX), (S <= UINT16_MAX)>::Type>
 class canlib_circular_buffer {
-public:
+ public:
   static constexpr IT capacity = static_cast<IT>(S);
 
   using index_t = IT;
 
   constexpr canlib_circular_buffer();
-  canlib_circular_buffer(const canlib_circular_buffer &) = delete;
-  canlib_circular_buffer(canlib_circular_buffer &&) = delete;
-  canlib_circular_buffer &operator=(const canlib_circular_buffer &) = delete;
-  canlib_circular_buffer &operator=(canlib_circular_buffer &&) = delete;
+  canlib_circular_buffer(const canlib_circular_buffer &);
+  canlib_circular_buffer(canlib_circular_buffer &&);
+  canlib_circular_buffer &operator=(const canlib_circular_buffer &);
+  canlib_circular_buffer &operator=(canlib_circular_buffer &&);
 
   bool unshift(T value);
   bool push(T value);
@@ -50,7 +56,7 @@ public:
   void inline clear();
   size_t inline offset() const;
 
-private:
+ private:
   T buffer[S];
   T *head;
   T *tail;
@@ -61,10 +67,77 @@ private:
   volatile IT count;
 #endif
 };
+/**
+ *  Use network_<> to get all the values from the protobuffer.
+ *  Every network can be consensed into one network_<> as all the
+ *  messages names are unique.
+ **/
+
+typedef std::string field_name;
+typedef std::string messages_name;
+typedef canlib_circular_buffer<double, CANLIB_CIRCULAR_BUFFER_SIZE>
+    double_buffer;
+typedef canlib_circular_buffer<uint64_t, CANLIB_CIRCULAR_BUFFER_SIZE>
+    uint64_buffer;
+typedef canlib_circular_buffer<std::string, CANLIB_CIRCULAR_BUFFER_SIZE>
+    string_buffer;
+
+typedef std::unordered_map<field_name, double_buffer> message_signals;
 
 template <typename T, size_t S, typename IT>
 constexpr canlib_circular_buffer<T, S, IT>::canlib_circular_buffer()
     : head(buffer), tail(buffer), count(0), _offset(0) {}
+
+template <typename T, size_t S, typename IT>
+canlib_circular_buffer<T, S, IT>::canlib_circular_buffer(
+    const canlib_circular_buffer &other) {
+  count = other.count;
+  _offset = other._offset;
+  head = buffer + (other.head - other.buffer);
+  tail = buffer + (other.tail - other.buffer);
+  for (size_t i = 0; i < capacity; i++) {
+    buffer[i] = other.buffer[i];
+  }
+}
+template <typename T, size_t S, typename IT>
+canlib_circular_buffer<T, S, IT>::canlib_circular_buffer(
+    canlib_circular_buffer &&other) {
+  count = other.count;
+  _offset = other._offset;
+  head = buffer + (other.head - other.buffer);
+  tail = buffer + (other.tail - other.buffer);
+  for (size_t i = 0; i < capacity; i++) {
+    buffer[i] = other.buffer[i];
+  }
+}
+template <typename T, size_t S, typename IT>
+canlib_circular_buffer<T, S, IT> &canlib_circular_buffer<T, S, IT>::operator=(
+    const canlib_circular_buffer &other) {
+  if (this != &other) {
+    count = other.count;
+    _offset = other._offset;
+    head = buffer + (other.head - other.buffer);
+    tail = buffer + (other.tail - other.buffer);
+    for (size_t i = 0; i < capacity; i++) {
+      buffer[i] = other.buffer[i];
+    }
+  }
+  return *this;
+}
+template <typename T, size_t S, typename IT>
+canlib_circular_buffer<T, S, IT> &canlib_circular_buffer<T, S, IT>::operator=(
+    canlib_circular_buffer &&other) {
+  if (this != &other) {
+    count = other.count;
+    _offset = other._offset;
+    head = buffer + (other.head - other.buffer);
+    tail = buffer + (other.tail - other.buffer);
+    for (size_t i = 0; i < capacity; i++) {
+      buffer[i] = other.buffer[i];
+    }
+  }
+  return *this;
+}
 
 template <typename T, size_t S, typename IT>
 bool canlib_circular_buffer<T, S, IT>::unshift(T value) {
@@ -107,8 +180,7 @@ bool canlib_circular_buffer<T, S, IT>::push(T value) {
 
 template <typename T, size_t S, typename IT>
 T canlib_circular_buffer<T, S, IT>::shift() {
-  if (count == 0)
-    return *head;
+  if (count == 0) return *head;
   T result = *head++;
   if (head >= buffer + capacity) {
     head = buffer;
@@ -119,8 +191,7 @@ T canlib_circular_buffer<T, S, IT>::shift() {
 
 template <typename T, size_t S, typename IT>
 T canlib_circular_buffer<T, S, IT>::pop() {
-  if (count == 0)
-    return *tail;
+  if (count == 0) return *tail;
   T result = *tail--;
   if (tail < buffer) {
     tail = buffer + capacity - 1;
@@ -146,15 +217,13 @@ const T &canlib_circular_buffer<T, S, IT>::start() const {
 
 template <typename T, size_t S, typename IT>
 T &canlib_circular_buffer<T, S, IT>::operator[](IT index) {
-  if (index >= count)
-    return *tail;
+  if (index >= count) return *tail;
   return *(buffer + ((head - buffer + index) % capacity));
 }
 
 template <typename T, size_t S, typename IT>
 const T &canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
-  if (index >= count)
-    return *tail;
+  if (index >= count) return *tail;
   return *(buffer + ((head - buffer + index) % capacity));
 }
 
@@ -188,24 +257,3 @@ template <typename T, size_t S, typename IT>
 size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
   return _offset;
 }
-
-#ifndef CANLIB_CIRCULAR_BUFFER_SIZE
-#define CANLIB_CIRCULAR_BUFFER_SIZE 2000
-#endif // CANLIB_CIRCULAR_BUFFER_SIZE
-
-/**
- *  Use network_<> to get all the values from the protobuffer.
- *  Every network can be consensed into one network_<> as all the
- *  messages names are unique.
- **/
-
-typedef std::string field_name;
-typedef std::string messages_name;
-typedef canlib_circular_buffer<double, CANLIB_CIRCULAR_BUFFER_SIZE>
-    double_buffer;
-typedef canlib_circular_buffer<uint64_t, CANLIB_CIRCULAR_BUFFER_SIZE>
-    uint64_buffer;
-typedef canlib_circular_buffer<std::string, CANLIB_CIRCULAR_BUFFER_SIZE>
-    string_buffer;
-
-typedef std::unordered_map<field_name, double_buffer> message_signals;
