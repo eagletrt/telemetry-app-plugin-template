@@ -35,3 +35,6 @@ build/
 debug/
 release/
 lib/
+out/
+*.csv
+*.log
