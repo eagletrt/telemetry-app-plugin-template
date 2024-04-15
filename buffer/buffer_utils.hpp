@@ -107,6 +107,22 @@ double sum(const double_buffer &buffer) {
   return sum;
 }
 
+double_buffer zeros(size_t size = CANLIB_CIRCULAR_BUFFER_SIZE) {
+  double_buffer result;
+  for (size_t i = 0; i < size && i < CANLIB_CIRCULAR_BUFFER_SIZE; ++i) {
+    result.push(0.0);
+  }
+  return result;
+}
+
+double_buffer ones(size_t size = CANLIB_CIRCULAR_BUFFER_SIZE) {
+  double_buffer result;
+  for (size_t i = 0; i < size && i < CANLIB_CIRCULAR_BUFFER_SIZE; ++i) {
+    result.push(1.0);
+  }
+  return result;
+}
+
 double_buffer operator==(const double_buffer &lhs, const double_buffer &rhs) {
   double_buffer result = lhs;
   for (size_t i = 0; i < rhs.size(); i++) {
@@ -316,4 +332,4 @@ double_buffer trunc(const double_buffer &buffer) {
   return result;
 }
 
-};  // namespace std
+}; // namespace std
